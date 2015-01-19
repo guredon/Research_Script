@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import codecs
-import re, pprint 
+import re
+import pprint 
 import sys
 import MeCab
 import glob
+import nltk
 
 ##### メソッド定義（開始）#####
 
@@ -75,7 +77,7 @@ ITWORDS = 9175 # 確認するIT用語の数を指定
 makeWordList()
 
 # IT用語が入っているかどうか確
-for file in glob.glob('e-words_430/*.txt'):
+for file in glob.glob('e-words_50/*.txt'):
     #print file
     counter, morNum = checkITWords(file)
     #print morNum, counter, float(counter)/morNum
