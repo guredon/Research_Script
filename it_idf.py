@@ -49,7 +49,7 @@ def checkITWords(file):
                     #print itWordsList[j]
                     #print mor[i]
                     counter += 1
-                    idfITwordsList.append(mor[i])
+                    idfITwordsList.append(itWordsList[j])
                     #print (convertJapanese(idfITwordsList))
             #line = f.readline()
         #file.close
@@ -91,8 +91,10 @@ def calc_idf(morListGroup):
 
     for i in range(num):
         for word in morListGroup[i]:
-            allCount[i] = wordCount.setdefault(word, 0)
-            wordCount[word]+=1
+            for j in range(0, ITWORDS): 
+                if (itWordsList[j] == word): # IT用語かどうかの判定
+                    allCount[i] = wordCount.setdefault(word, 0)
+                    wordCount[word]+=1
         allCount[i] = wordCount
         wordCount = {}          # 各説明文章ごとに形態素出現回数を格納
 
@@ -110,11 +112,12 @@ def calc_idf(morListGroup):
 
     for i in range(num):
         for word in allCount[i]:
-            for j in range(0, ITWORDS): 
-                if (itWordsList[j] in word): # IT用語かどうかの判定
-                    idfstore[word] = math.log(1.0 * math.fabs(num) / math.fabs(sub_idf[word]))    # fabsは絶対値
-                    print(convertJapanese(word))
-                    print idfstore[word]
+            #for j in range(0, ITWORDS): 
+                #if (itWordsList[j] == word): # IT用語かどうかの判定
+                    #idfstore[itWordsList[j]] = math.log(1.0 * math.fabs(num) / math.fabs(sub_idf[itWordsList[j]]))    # fabsは絶対値
+            idfstore[word] = math.log(1.0 * math.fabs(num) / math.fabs(sub_idf[word]))    # fabsは絶対値
+                    #print idfstore[word]
+            it_words_dic[word] = idfstore[word] 
 
 ##### メソッド定義（終了）#####
 
@@ -124,6 +127,7 @@ itWordsList = [] # IT用語のリスト
 ITWORDS = 9175 # 確認するIT用語の数を指定
 morListGroup = [] # 全テキストの形態素
 idfITwordsList = [] # IDF計算で対象となるIT用語
+it_words_dic = {}
 
 # IT用語が入ったテキストを開いて読み込む
 makeWordList()
@@ -135,6 +139,7 @@ for file in glob.glob('e-words_430/*.txt'):
     #print morNum, counter, float(counter)/morNum
     #print float(counter)/morNum
 
-print '------------------------------------'
+#print(convertJapanese(itWordsList))
 
 calc_idf(morListGroup)
+print(convertJapanese(it_words_dic))
