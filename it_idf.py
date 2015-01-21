@@ -83,6 +83,8 @@ def nltk_idf(morListGroup, idfITwordsList):
             print 'TF = %f' % A.tf(token_type, idfITwordsList)
             print 'IDF = %f' % A.idf(token_type)
 
+
+## IT用語のIDFを求めるメソッド ##
 def calc_idf(morListGroup):
     allCount = {}  
     idfstore = {}
@@ -95,6 +97,7 @@ def calc_idf(morListGroup):
                 if (itWordsList[j] == word): # IT用語かどうかの判定
                     allCount[i] = wordCount.setdefault(word, 0)
                     wordCount[word]+=1
+                    it_words_key_list.append(word)
         allCount[i] = wordCount
         wordCount = {}          # 各説明文章ごとに形態素出現回数を格納
 
@@ -119,6 +122,20 @@ def calc_idf(morListGroup):
                     #print idfstore[word]
             it_words_dic[word] = idfstore[word] 
 
+
+## 文書のIDFを求めるメソッド ##
+def calc_doc_idf(file):
+    sum = 0
+    for line in open(file, 'r'):
+        for j in range(0, ITWORDS): 
+            if (itWordsList[j] in line): # 文書のなかに含まれるIT用語を取り出す
+                if (itWordsList[j] in it_words_key_list):
+                    value = it_words_dic[itWordsList[j]]
+                    print file, (convertJapanese(itWordsList[j])), value
+                    sum += value
+        print file, sum
+        sum = 0
+
 ##### メソッド定義（終了）#####
 
 
@@ -127,12 +144,13 @@ itWordsList = [] # IT用語のリスト
 ITWORDS = 9175 # 確認するIT用語の数を指定
 morListGroup = [] # 全テキストの形態素
 idfITwordsList = [] # IDF計算で対象となるIT用語
-it_words_dic = {}
+it_words_dic = {} # IDFの辞書
+it_words_key_list = []
 
 # IT用語が入ったテキストを開いて読み込む
 makeWordList()
 
-# IT用語が入っているかどうか確
+# IT用語が入っているかどうか確認
 for file in glob.glob('e-words_430/*.txt'):
     #print file
     counter, morNum = checkITWords(file)
@@ -142,4 +160,7 @@ for file in glob.glob('e-words_430/*.txt'):
 #print(convertJapanese(itWordsList))
 
 calc_idf(morListGroup)
-print(convertJapanese(it_words_dic))
+#print(convertJapanese(it_words_dic))
+
+for file in glob.glob('e-words_430/*.txt'):
+    calc_doc_idf(file)
