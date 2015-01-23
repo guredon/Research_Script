@@ -33,42 +33,25 @@ def makeWordList():
     f.close
     #print(convertJapanese(itWordsList))
 
-## IT用語が入っているかどうか確認 ##
-def checkITWords(file):
-    #f = open('sns.txt') # 検索をかけたいテキストファイル
-    for line in open(file, 'r'):
-        counter = 0
-        #line = f.readline() # 1行を文字列として読み込む(改行文字も含まれる)
-        mor = MorphologicalAnalysis(line)
-        morListGroup.append(mor)
-        #while line:
-        for i in range(0, len(mor)):
-            for j in range(0, ITWORDS): 
-                #if (itWordsList[j] in line): # IT用語が文章に含まれていないか確認
-                if (itWordsList[j] in mor[i]): # IT用語が文章に含まれていないか確認
-                    #print itWordsList[j]
-                    #print mor[i]
-                    counter += 1
-                    idfITwordsList.append(itWordsList[j])
-                    #print (convertJapanese(idfITwordsList))
-            #line = f.readline()
-        #file.close
-    return counter, len(mor)
 
 ## 形態素解析を行うメソッド ##
-def MorphologicalAnalysis(line):
+def MorphologicalAnalysis(file):
+
     morList = []    # 形態素解析結果のリスト
-    line_encode = line.encode('utf-8')
-    tagger = MeCab.Tagger ("-Owakati")
-    node = tagger.parseToNode(line_encode)
-    while node:
-        #print node.surface # 形態素解析結果を出力
-        sur = node.surface
-        sur_decode = sur.decode('utf-8')
-        morList.append(sur_decode)
-        node = node.next
+
+    for line in open(file, 'r'):
+        line_encode = line.encode('utf-8')
+        tagger = MeCab.Tagger ("-Owakati")
+        node = tagger.parseToNode(line_encode)
+        while node:
+            #print node.surface # 形態素解析結果を出力
+            sur = node.surface
+            sur_decode = sur.decode('utf-8')
+            morList.append(sur_decode)
+            node = node.next
     #print(convertJapanese(morList)) # 形態素解析結果のリストを出力
-    return morList
+    morListGroup.append(morList)
+    #return morList
 
 ## IDFを求めるメソッド ##
 def nltk_idf(morListGroup, idfITwordsList):
@@ -84,8 +67,8 @@ def nltk_idf(morListGroup, idfITwordsList):
             print 'IDF = %f' % A.idf(token_type)
 
 
-## IT用語のIDFを求めるメソッド ##
-def calc_idf(morListGroup):
+## IT用語をKey, IDFをValueとした辞書を作成するメソッド ##
+def make_idf_dic(morListGroup):
     allCount = {}  
     idfstore = {}
     wordCount = {}
@@ -120,7 +103,7 @@ def calc_idf(morListGroup):
                     #idfstore[itWordsList[j]] = math.log(1.0 * math.fabs(num) / math.fabs(sub_idf[itWordsList[j]]))    # fabsは絶対値
             idfstore[word] = math.log(1.0 * math.fabs(num) / math.fabs(sub_idf[word]))    # fabsは絶対値
                     #print idfstore[word]
-            it_words_dic[word] = idfstore[word] 
+            it_words_idf_dic[word] = idfstore[word] 
 
 
 ## 文書のIDFを求めるメソッド ##
@@ -129,46 +112,49 @@ def calc_doc_idf(file):
     for line in open(file, 'r'):
         for j in range(0, ITWORDS): 
             if (itWordsList[j] in line): # 文書のなかに含まれるIT用語を取り出す
-                if (itWordsList[j] in it_words_key_list):
-                    value = it_words_dic[itWordsList[j]]
+                if (itWordsList[j] in it_words_key_list): # IT用語と判断された形態素であるか
+                    value = it_words_idf_dic[itWordsList[j]]
                     #print file, (convertJapanese(itWordsList[j])), value
                     sum += value
-        print file, '\t\t', sum
+        #print file, '\t\t', sum
+        #tail = file.split('/')
+        file_decode = file.decode('utf-8')
+        it_doc_idf_dic[file_decode] = sum
         sum = 0
 
 # IDFの辞書をIDFの降順で並べて出力
-def sort_idf():
-    for word, count in sorted(it_words_dic.items(),key = lambda x:x[1],reverse = True):
-        #print(convertJapanese(it_words_dic))
-        #print(convertJapanese(it_words_dic.items()))
-        print '%-16s %2.3f' % (word,count)
+def sort_idf(dic):
+    for word, count in sorted(dic.items(), key = lambda x:x[1], reverse = True):
+        #print(convertJapanese(it_words_idf_dic))
+        #print(convertJapanese(it_words_idf_dic.items()))
+        print '%-50s %2.3f' % (word,count)
 
 ##### メソッド定義（終了）#####
 
 
 # 空のリストを生成
-itWordsList = [] # IT用語のリスト
+
 ITWORDS = 9175 # 確認するIT用語の数を指定
+itWordsList = [] # IT用語一覧
 morListGroup = [] # 全テキストの形態素
 idfITwordsList = [] # IDF計算で対象となるIT用語
-it_words_dic = {} # IDFの辞書
-it_words_key_list = []
+it_words_key_list = [] # IT用語と判断された形態素のリスト
+it_words_idf_dic = {} # IT用語をKey, IDFをValueとした辞書
+it_doc_idf_dic = {} # IT用語を説明した文書名をKey, IDFをValueとした辞書
 
 # IT用語が入ったテキストを開いて読み込む
 makeWordList()
 
-# IT用語が入っているかどうか確認
-for file in glob.glob('e-words_430/*.txt'):
-    #print file
-    counter, morNum = checkITWords(file)
-    #print morNum, counter, float(counter)/morNum
-    #print float(counter)/morNum
+# 形態素解析を行う
+for file in glob.glob('e-words_430/*'):
+    MorphologicalAnalysis(file)
 
-#print(convertJapanese(itWordsList))
+# 辞書を作成する
+make_idf_dic(morListGroup)
 
-calc_idf(morListGroup)
-sort_idf()
-#print(convertJapanese(it_words_dic))
+# 文書のIDFを求める
+for file in glob.glob('e-words_430/*'):
+    calc_doc_idf(file)
 
-#for file in glob.glob('e-words_430/*.txt'):
-    #calc_doc_idf(file)
+# IDFを降順にソートする
+sort_idf(it_doc_idf_dic)
