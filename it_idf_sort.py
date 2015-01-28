@@ -116,7 +116,7 @@ def calc_doc_idf(file):
                     value = it_words_idf_dic[itWordsList[j]]
                     #print file, (convertJapanese(itWordsList[j])), value
                     sum += value
-        #print file, '\t\t', sum
+        print file, '\t\t\t', sum
         #tail = file.split('/')
         file_decode = file.decode('utf-8')
         it_doc_idf_dic[file_decode] = sum
@@ -146,7 +146,7 @@ it_doc_idf_dic = {} # IT用語を説明した文書名をKey, IDFをValueとし�
 makeWordList()
 
 # 形態素解析を行う
-for file in glob.glob('e-words_430/*'):
+for file in glob.glob('IT_700_430/*'):
     MorphologicalAnalysis(file)
 
 # 辞書を作成する
@@ -157,4 +157,4 @@ for file in glob.glob('e-words_430/*'):
     calc_doc_idf(file)
 
 # IDFを降順にソートする
-sort_idf(it_doc_idf_dic)
+#sort_idf(it_doc_idf_dic)

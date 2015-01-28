@@ -43,9 +43,9 @@ def checkITWords(file):
         for i in range(0, len(mor)):
             for j in range(0, ITWORDS): 
                 #if (itWordsList[j] in line): # IT用語が文章に含まれていないか確認
-                if (itWordsList[j] in mor[i]): # IT用語が文章に含まれていないか確認
+                if (itWordsList[j] == mor[i]): # IT用語が文章に含まれていないか確認
                     #print itWordsList[j]
-                    print mor[i]
+                    #print mor[i]
                     counter += 1
             #line = f.readline()
         #file.close
@@ -71,7 +71,7 @@ def MorphologicalAnalysis(line):
 
 # 空のリストを生成
 itWordsList = [] # IT用語のリスト
-ITWORDS = 9175 # 確認するIT用語の数を指定
+ITWORDS = 9185 # 確認するIT用語の数を指定
 
 # IT用語が入ったテキストを開いて読み込む
 makeWordList()
@@ -81,5 +81,5 @@ for file in glob.glob('e-words_50/*.txt'):
     #print file
     counter, morNum = checkITWords(file)
     #print morNum, counter, float(counter)/morNum
-    print float(counter)/morNum
+    print file, float(counter)/morNum
 
